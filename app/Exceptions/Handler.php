@@ -63,7 +63,7 @@ class Handler extends ExceptionHandler
         // dd($exception);
         // dd($exception->getMessage());
         $message = $exception->getMessage();
-
+        $errors = null;
         $status = 500;
 
         if (method_exists($exception, 'getStatusCode')) {
