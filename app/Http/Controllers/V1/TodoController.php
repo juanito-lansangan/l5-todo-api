@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1;
 
+use Validator;
 use App\Todo;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -46,6 +47,12 @@ class TodoController extends Controller
      */
     public function store(Request $request)
     {
+        $rules = [
+            'todo_title' => 'string|required',
+        ];
+
+        $this->validate($request, $rules);
+
         $newTodo = new Todo();
         $newTodo->todo_title = $request->title;
         $newTodo->save();
