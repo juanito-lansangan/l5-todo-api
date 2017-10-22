@@ -7,6 +7,7 @@ use App\Todo;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TodoCollection;
+use App\Http\Resources\Todo as TodoReponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Http\Response;
@@ -20,11 +21,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        $todos = Todo::where('id', 100)->get();
-
-        if($todos->count() == 0) {
-            throw new HttpException(Response::HTTP_NOT_FOUND, "Todos not found");
-        }
+        $todos = Todo::all();
 
         return new TodoCollection($todos);
     }
@@ -55,8 +52,8 @@ class TodoController extends Controller
 
         $newTodo = new Todo();
         $newTodo->todo_title = $request->title;
+        throw new HttpException(Response::HTTP_UNAUTHORIZED, "Error in saving Todo");
         $newTodo->save();
-
         return [
             'status' => Response::HTTP_OK,
             'data' => [
@@ -73,7 +70,13 @@ class TodoController extends Controller
      */
     public function show($id)
     {
-        //
+        $todos = Todo::where('id', $id)->first();
+
+        if(!$todos) {
+            throw new HttpException(Response::HTTP_NOT_FOUND, "Todo {$id} not found");
+        }
+
+        return new TodoReponse($todos);
     }
 
     /**

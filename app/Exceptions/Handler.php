@@ -10,6 +10,7 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
+use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
 {
@@ -86,7 +87,22 @@ class Handler extends ExceptionHandler
                 'trace' => explode("\n", $exception->getTraceAsString()),
             ]
         ];
-
+        $this->log($exceptions);
         return response()->json(['meta' => $exceptions]);
+    }
+
+
+    private function log($exceptions)
+    {
+        $errorLog = "";
+        foreach ($exceptions as $key => $exception) {
+            $strException = is_array($exception) ? json_encode($exception) : $exception;
+            $message = "{$key}: {$strException}";
+            if($key == 'message') {
+                $message = $strException;
+            }
+            $errorLog .= $message . "\n";
+        }
+        Log::error($errorLog);
     }
 }
