@@ -5,14 +5,14 @@ namespace App\Http\Controllers\V1;
 use Validator;
 use App\Todo;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use App\Http\Resources\TodoCollection;
 use App\Http\Resources\Todo as TodoReponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Http\Response;
 
-class TodoController extends Controller
+class TodoController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -51,15 +51,15 @@ class TodoController extends Controller
         $this->validate($request, $rules);
 
         $newTodo = new Todo();
-        $newTodo->todo_title = $request->title;
-        throw new HttpException(Response::HTTP_UNAUTHORIZED, "Error in saving Todo");
+        $newTodo->todo_title = $request->todo_title;
         $newTodo->save();
-        return [
-            'status' => Response::HTTP_OK,
-            'data' => [
-                'message' => 'Todo successfully saved'
-            ],
-        ];
+        // return [
+        //     'status' => Response::HTTP_OK,
+        //     'data' => [
+        //         'message' => 'Todo successfully saved'
+        //     ],
+        // ];
+        return $this->sendResponse(['message' => 'Todo saved successfully']);
     }
 
     /**

@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\BaseController;
 
 class Handler extends ExceptionHandler
 {
@@ -67,12 +67,27 @@ class Handler extends ExceptionHandler
         $errors = null;
         $status = 500;
 
-        if (method_exists($exception, 'getStatusCode')) {
-            $status = $exception->getStatusCode();
-        }
-
         if($exception instanceof ValidationException) {
             $errors = $exception->errors();
+        }
+
+
+        $stack = [
+            'line' => $exception->getLine(),
+            'file' => $exception->getFile(),
+            'class' => get_class($exception),
+            'trace' => explode("\n", $exception->getTraceAsString()),
+        ];
+
+        $baseController = new BaseController();
+        if (method_exists($exception, 'getHeaders')) {
+            $baseController->setHeaders($exception->getHeaders() ?? []);
+        }
+
+        if (method_exists($exception, 'getStatusCode')) {
+            $status = $exception->getStatusCode();
+        } else {
+            $status = 500;
         }
 
         $exceptions = [
@@ -80,29 +95,12 @@ class Handler extends ExceptionHandler
             'status' => $status,
             'request' => $request->all(),
             'errors' => $errors,
-            'stack_trace' => [
-                'line' => $exception->getLine(),
-                'file' => $exception->getFile(),
-                'class' => get_class($exception),
-                'trace' => explode("\n", $exception->getTraceAsString()),
-            ]
+            'stack_trace' => $stack
         ];
-        $this->log($exceptions);
-        return response()->json(['meta' => $exceptions]);
+
+        $baseController->sendErrorLog($exceptions);
+
+        return $baseController->sendError($message, $status, md5(uniqid()), $errors, $stack);
     }
 
-
-    private function log($exceptions)
-    {
-        $errorLog = "";
-        foreach ($exceptions as $key => $exception) {
-            $strException = is_array($exception) ? json_encode($exception) : $exception;
-            $message = "{$key}: {$strException}";
-            if($key == 'message') {
-                $message = $strException;
-            }
-            $errorLog .= $message . "\n";
-        }
-        Log::error($errorLog);
-    }
 }
